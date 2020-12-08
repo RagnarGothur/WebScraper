@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using WebScraper.Contracts;
-using WebScraper.Models;
+using WebScraper.Models.DTO;
 
 namespace WebScraper.Services
 {
@@ -20,7 +20,7 @@ namespace WebScraper.Services
         private const string IMAGES_PATH = @".files\images";//..\..\..\..\..\WebScraper\.files\images
 
         private readonly IAppSettings _settings;
-        protected string DownloadPath { get; } = $"{IMAGES_PATH}\\{DateTime.Today.Date.ToShortDateString()}";
+        protected string DownloadPath { get; } = $"{IMAGES_PATH}\\{DateTime.Today.Date.ToShortDateString()}"; //e.g. 08.12.2020
 
         public ImagesDownloader(IAppSettings settings, ILogger<ImagesDownloader> logger) : base(logger)
         {
@@ -39,7 +39,7 @@ namespace WebScraper.Services
             if (sources.Any())
                 Directory.CreateDirectory(downloadPath);
 
-            //TODO: Count() can execute a long time
+            //TODO: Count() can take a long time
             Logger.LogDebug($"downloading {sources.Count()} images in {threadCount} threads");
             foreach (string src in sources)
             {
@@ -53,21 +53,19 @@ namespace WebScraper.Services
                 {
                     try
                     {
-                        if (cancellation.IsCancellationRequested)
-                            return;
-
                         var data = await HttpClient.GetByteArrayAsync(src, cancellation);
-                        var stream = new MemoryStream(data);
-                        var fileSize = stream.Length; //TODO: check whether it is really image size
+                        var fileSize = data.Length; //TODO: check whether is it actual image size
 
                         if (cancellation.IsCancellationRequested)
                             return;
 
-                        var path = $"{downloadPath}\\{Guid.NewGuid()}";
+                        var img = Image.FromStream(new MemoryStream(data));
 
-                        Image.FromStream(stream).Save(path, ImageFormat.Png);
+                        var filePath = $"{downloadPath}\\{Guid.NewGuid()}";
 
-                        downloadedImages.Add(new DownloadedImage(src, $"{path}.png", fileSize));
+                        img.Save(filePath, ImageFormat.Png);
+
+                        downloadedImages.Add(new DownloadedImage(src, $"{filePath}.png", fileSize));
                     }
                     finally
                     {

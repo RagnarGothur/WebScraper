@@ -1,13 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-using WebScraper.Models;
+using WebScraper.Models.DTO;
 
 namespace WebScraper.Contracts
 {
     public interface IScraper
     {
-        public Task<List<ScrapedImage>> ScrapeImagesAsync(string url, int imageCount, CancellationToken cancellation);
+        public Task<List<ScrapedImage>> ScrapeImagesAsync(Uri url, int imageCount, CancellationToken cancellation);
     }
 }

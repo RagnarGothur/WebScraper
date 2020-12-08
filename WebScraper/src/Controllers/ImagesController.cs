@@ -2,12 +2,15 @@
 using Microsoft.Extensions.Logging;
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
 using WebScraper.Contracts;
 using WebScraper.Models;
+using WebScraper.Models.DTO;
+using WebScraper.Models.Responses;
 
 namespace WebScraper.Controllers
 {
@@ -38,22 +41,35 @@ namespace WebScraper.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetAsync(
-            [Required, FromQuery] string url, 
-            [Required, Range(1, int.MaxValue), FromQuery] int threadCount, 
-            [Required, Range(0, int.MaxValue), FromQuery] int imageCount //Or maybe just to use uint...?
+            [Required, FromQuery] string url,
+            [Required, Range(1, int.MaxValue), FromQuery] int threadCount,
+            [Required, Range(0, int.MaxValue), FromQuery] int imageCount //Or maybe just to use uint...
         )
         {
-            if (!Uri.IsWellFormedUriString(url, UriKind.RelativeOrAbsolute))
-                ModelState.AddModelError($"{url} is invalid url", nameof(url));
+            Uri uri = null;
+            try
+            {
+                uri = new Uri(url);
+            }
+            catch (UriFormatException)
+            {
+                ModelState.AddModelError(nameof(url), $"Url misformat: {url}");
+            }
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var cancellation = _timeouter.GetCancellationWithTimeout((int)_settings.MaxExecutionTime.TotalMilliseconds);
-            var scraped = await _scraper.ScrapeImagesAsync(url, imageCount, cancellation);
+            var scraped = await _scraper.ScrapeImagesAsync(uri, imageCount, cancellation);
             var downloaded = await _imagesDownloader.DownloadAsync(scraped.Select(s => s.Src), threadCount, cancellation);
 
-            return new JsonResult(downloaded);
+            var result = scraped
+                .Join(downloaded, s => s.Src, d => d.Src, (s, d) => new ImageInfo(s.Src, s.Alt, d.Size))
+                .GroupBy(i => new Uri(i.Src).Host)
+                .Select(g => new GroupedImages() { Host = g.Key, Images = g.ToList() })
+                .ToList();
+
+            return new JsonResult(result);
         }
     }
 }

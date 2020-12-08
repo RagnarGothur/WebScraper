@@ -370,3 +370,8 @@ Controllers/WeatherForecastController.cs
 .vs/
 .idea/
 .vscode/
+
+
+# Project specific ignores
+*.txt
+.files/

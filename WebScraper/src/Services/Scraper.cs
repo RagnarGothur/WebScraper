@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using WebScraper.Contracts;
-using WebScraper.Models;
+using WebScraper.Models.DTO;
 
 namespace WebScraper.Services
 {
@@ -32,7 +32,7 @@ namespace WebScraper.Services
             _settings = settings;
         }
 
-        public async Task<List<ScrapedImage>> ScrapeImagesAsync(string url, int imageCount, CancellationToken cancellation)
+        public async Task<List<ScrapedImage>> ScrapeImagesAsync(Uri url, int imageCount, CancellationToken cancellation)
         {
             Logger.LogDebug($"send request to {url}");
             var response = await HttpClient.GetAsync(url, cancellation);

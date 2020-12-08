@@ -9,7 +9,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 
 using WebScraper.Contracts;
-using WebScraper.Models;
+using WebScraper.Models.DTO;
 using WebScraper.Services;
 
 namespace WebScraper
