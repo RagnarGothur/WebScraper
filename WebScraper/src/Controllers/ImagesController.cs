@@ -63,6 +63,8 @@ namespace WebScraper.Controllers
             var scraped = await _scraper.ScrapeImagesAsync(uri, imageCount, cancellation);
             var downloaded = await _imagesDownloader.DownloadAsync(scraped.Select(s => s.Src), threadCount, cancellation);
 
+            Response.Headers.Add("Fully-Completed", cancellation.IsCancellationRequested ? "0": "1");
+
             var result = scraped
                 .Join(downloaded, s => s.Src, d => d.Src, (s, d) => new ImageInfo(s.Src, s.Alt, d.Size))
                 .GroupBy(i => new Uri(i.Src).Host)
