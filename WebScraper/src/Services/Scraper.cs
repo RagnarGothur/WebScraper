@@ -36,8 +36,7 @@ namespace WebScraper.Services
         {
             Logger.LogDebug($"send request to {url}");
             var response = await HttpClient.GetAsync(url, cancellation);
-            if (!response.IsSuccessStatusCode)
-                throw new ApplicationException($"{url} response status code: {response.StatusCode}");
+            response.EnsureSuccessStatusCode();
 
             Logger.LogDebug("read html");
             var html = await response.Content.ReadAsStringAsync(cancellation);
