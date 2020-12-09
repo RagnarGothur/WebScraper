@@ -18,6 +18,8 @@ namespace WebScraper.Controllers
     [Route("[controller]")]
     public class ImagesController : ControllerBase
     {
+        private const string FULLY_COMPLETED_HEADER = "Fully-Completed";
+
         private readonly ILogger<ImagesController> _logger;
         private readonly IAppSettings _settings;
         private readonly IScraper _scraper;
@@ -63,7 +65,7 @@ namespace WebScraper.Controllers
             var scraped = await _scraper.ScrapeImagesAsync(uri, imageCount, cancellation);
             var downloaded = await _imagesDownloader.DownloadAsync(scraped.Select(s => s.Src), threadCount, cancellation);
 
-            Response.Headers.Add("Fully-Completed", cancellation.IsCancellationRequested ? "0": "1");
+            Response.Headers.Add(FULLY_COMPLETED_HEADER, cancellation.IsCancellationRequested ? "0": "1");
 
             var result = scraped
                 .Join(downloaded, s => s.Src, d => d.Src, (s, d) => new ImageInfo(s.Src, s.Alt, d.Size))
